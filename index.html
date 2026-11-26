@@ -1,0 +1,3340 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>포구리 연못 구하기 | 일상 속 감성 물 절약</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23B9E89C'/%3E%3Ccircle cx='22' cy='22' r='8' fill='%23FFFFFF'/%3E%3Ccircle cx='42' cy='22' r='8' fill='%23FFFFFF'/%3E%3Ccircle cx='22' cy='22' r='4' fill='%232F4628'/%3E%3Ccircle cx='42' cy='22' r='4' fill='%232F4628'/%3E%3Cellipse cx='17' cy='35' rx='5' ry='3' fill='%23FFB5BA'/%3E%3Cellipse cx='47' cy='35' rx='5' ry='3' fill='%23FFB5BA'/%3E%3Cpath d='M24 38 Q32 44 40 38' stroke='%232F4628' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg-ivory: #FAFDF7;
+      --bg-white: #FFFFFF;
+      --green: #B9E89C;
+      --green-soft: #EDF9E4;
+      --green-border: #D9ECCD;
+      --green-deep: #2F4628;
+      --water: #B7DFF7;
+      --water-soft: #EAF6FD;
+      --water-deep: #225877;
+      --coral: #FFB5BA;
+      --coral-soft: #FFF1F2;
+      --coral-deep: #A6424C;
+      --text-main: #3C4A38;
+      --text-muted: #6B7E65;
+      --shadow-card: 0 12px 30px rgba(84, 114, 73, 0.08);
+      --shadow-soft: 0 4px 14px rgba(84, 114, 73, 0.06);
+      --font-body: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', 'Noto Sans KR', sans-serif;
+      --font-display: 'Jua', 'NanumSquareRound', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg-ivory);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, .font-display {
+      font-family: var(--font-display);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    button, input {
+      font-family: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 스크롤바 */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-ivory);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CFE8C3;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--green);
+    }
+
+    /* 애니메이션 */
+    @keyframes poguriBreathe {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-5px) scale(1.015); }
+    }
+
+    @keyframes poguriBounce {
+      0% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(-14px) scale(1.05, 0.96); }
+      50% { transform: translateY(0) scale(0.97, 1.03); }
+      75% { transform: translateY(-6px) scale(1.02, 0.99); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes dropletFall {
+      0% { opacity: 0; transform: translateY(-24px) scale(0.7); }
+      25% { opacity: 1; transform: translateY(0) scale(1.08); }
+      80% { opacity: 0.9; transform: translateY(44px) scale(0.95); }
+      100% { opacity: 0; transform: translateY(68px) scale(0.5); }
+    }
+
+    @keyframes bubblePop {
+      0% { opacity: 0; transform: translateY(6px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes modalUp {
+      0% { opacity: 0; transform: translateY(16px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    @keyframes toastIn {
+      0% { opacity: 0; transform: translate(-50%, -14px) scale(0.95); }
+      100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+
+    .animate-breathe {
+      animation: poguriBreathe 3.4s ease-in-out infinite;
+    }
+
+    .animate-bounce {
+      animation: poguriBounce 0.72s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .animate-bubble {
+      animation: bubblePop 0.35s ease-out;
+    }
+
+    .animate-shake {
+      animation: shakeError 0.38s ease-in-out;
+    }
+
+    /* ========================
+       토스트 알림
+    ======================== */
+    .toast-container {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      width: calc(100% - 32px);
+      max-width: 440px;
+      pointer-events: none;
+    }
+
+    .toast-box {
+      background: rgba(255, 255, 255, 0.96);
+      border: 2px solid var(--water);
+      border-radius: 22px;
+      padding: 12px 18px;
+      box-shadow: 0 12px 28px rgba(42, 96, 127, 0.16);
+      text-align: center;
+      animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 0.96rem;
+      color: var(--water-deep);
+    }
+
+    .toast-sub {
+      margin: 3px 0 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #2D6E48;
+    }
+
+    /* ========================
+       인트로 화면 (비주얼 노벨)
+    ======================== */
+    .intro-screen {
+      min-height: 100vh;
+      background-color: var(--bg-ivory);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pastel-blob {
+      position: fixed;
+      border-radius: 999px;
+      pointer-events: none;
+      filter: blur(50px);
+      opacity: 0.35;
+      z-index: 0;
+    }
+    .pastel-blob-1 {
+      width: 280px;
+      height: 280px;
+      background: var(--green);
+      top: -80px;
+      left: -80px;
+    }
+    .pastel-blob-2 {
+      width: 300px;
+      height: 300px;
+      background: var(--water);
+      bottom: -90px;
+      right: -80px;
+    }
+
+    .intro-topbar {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+    }
+
+    .intro-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px solid #E3EFD9;
+      font-size: 0.85rem;
+      color: #53664D;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn-skip {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 40;
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      border: 1.5px solid #D8E9CC;
+      color: #495C43;
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.18s ease;
+    }
+
+    @media (min-width: 780px) {
+      .btn-skip {
+        position: static;
+      }
+    }
+
+    .btn-skip:hover {
+      background: var(--green-soft);
+      border-color: var(--green);
+      transform: translateY(-1px);
+    }
+    .btn-skip:active {
+      transform: scale(0.96);
+    }
+
+    .intro-stage-wrap {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 18px 0;
+      z-index: 10;
+    }
+
+    /* 순백색 #FFFFFF 일러스트 무대 (경계선 티 나지 않게 순백색 통일) */
+    .intro-stage-card {
+      width: 100%;
+      background-color: #FFFFFF;
+      border-radius: 32px;
+      border: 2px solid #EAF4E2;
+      box-shadow: var(--shadow-card);
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-img-frame {
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 1312 / 1199;
+      background-color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-img-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+      display: block;
+    }
+
+    .intro-dialogue-wrap {
+      width: 100%;
+      max-width: 720px;
+      z-index: 20;
+    }
+
+    .dialogue-box {
+      position: relative;
+      background: rgba(255, 255, 255, 0.97);
+      border: 2.5px solid var(--green);
+      border-radius: 26px;
+      box-shadow: var(--shadow-card);
+      padding: 28px 22px 20px;
+      transition: border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .dialogue-box.clickable {
+      cursor: pointer;
+    }
+
+    .dialogue-box.clickable:hover {
+      border-color: #9AD876;
+    }
+
+    .dialogue-nametag {
+      position: absolute;
+      top: -16px;
+      left: 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 16px;
+      border-radius: 999px;
+      background: var(--green);
+      border: 2.5px solid #FFFFFF;
+      box-shadow: var(--shadow-soft);
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--green-deep);
+    }
+
+    .dialogue-dots {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .dialogue-dot {
+      height: 8px;
+      width: 8px;
+      border-radius: 999px;
+      background: #E4EFE0;
+      transition: all 0.28s ease;
+    }
+
+    .dialogue-dot.done {
+      background: var(--green);
+    }
+
+    .dialogue-dot.active {
+      width: 22px;
+      background: #7AC45B;
+    }
+
+    .dialogue-text {
+      margin: 0;
+      min-height: 60px;
+      font-size: 1.06rem;
+      line-height: 1.65;
+      font-weight: 500;
+      color: #32412E;
+      word-break: keep-all;
+    }
+
+    .dialogue-footer {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .dialogue-hint {
+      font-size: 0.78rem;
+      color: #7B8D75;
+    }
+
+    .btn-intro-next {
+      padding: 10px 20px;
+      border-radius: 16px;
+      border: 1.5px solid #A4DA83;
+      background: var(--green);
+      color: #284221;
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.18s ease;
+    }
+    .btn-intro-next:hover {
+      background: #A6DF84;
+      transform: translateY(-2px);
+    }
+    .btn-intro-next:active {
+      transform: scale(0.96);
+    }
+
+    .btn-intro-start {
+      padding: 11px 22px;
+      border-radius: 16px;
+      border: 1.5px solid #96CBEB;
+      background: var(--water);
+      color: #1F4A64;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.18s ease;
+    }
+    .btn-intro-start:hover {
+      background: #9FD3F4;
+      transform: translateY(-2px);
+    }
+    .btn-intro-start:active {
+      transform: scale(0.96);
+    }
+
+    /* ========================
+       메인 헤더 & 레이아웃
+    ======================== */
+    .main-shell {
+      min-height: 100vh;
+      padding-bottom: 54px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .app-header {
+      padding-top: 18px;
+      padding-bottom: 12px;
+    }
+
+    .header-bar {
+      background: rgba(255, 255, 255, 0.92);
+      border: 2px solid #E6F2DD;
+      border-radius: 24px;
+      box-shadow: var(--shadow-soft);
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--green-soft);
+      border: 1.5px solid var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 1.18rem;
+      color: var(--green-deep);
+      line-height: 1.25;
+    }
+
+    .brand-sub {
+      margin: 2px 0 0;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .header-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      padding: 8px 13px;
+      border-radius: 14px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:active {
+      transform: scale(0.96);
+    }
+
+    .nav-btn-story {
+      background: var(--green-soft);
+      border: 1.5px solid var(--green);
+      color: #2E4B26;
+    }
+    .nav-btn-story:hover { background: #DDF4CD; }
+
+    .nav-btn-guide {
+      background: var(--water-soft);
+      border: 1.5px solid var(--water);
+      color: #245775;
+    }
+    .nav-btn-guide:hover { background: #D5EEFA; }
+
+    .nav-btn-replay {
+      background: var(--bg-ivory);
+      border: 1.5px solid #DCE9D4;
+      color: #556850;
+    }
+    .nav-btn-replay:hover {
+      background: var(--coral-soft);
+      border-color: var(--coral);
+      color: var(--coral-deep);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-top: 8px;
+    }
+
+    @media (min-width: 940px) {
+      .main-grid {
+        grid-template-columns: 1.14fr 0.96fr;
+        gap: 22px;
+      }
+    }
+
+    .stack-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ========================
+       포구리 스테이지 카드 (순백색 #FFFFFF)
+    ======================== */
+    .stage-card {
+      background-color: #FFFFFF;
+      border-radius: 30px;
+      border: 2px solid #E6F2DD;
+      box-shadow: var(--shadow-card);
+      padding: 22px 20px;
+    }
+
+    @media (min-width: 640px) {
+      .stage-card {
+        padding: 26px 28px;
+      }
+    }
+
+    .speech-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .speech-bubble {
+      position: relative;
+      max-width: 440px;
+      background: var(--bg-ivory);
+      border: 2px solid var(--water);
+      border-radius: 20px;
+      padding: 11px 18px;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .speech-bubble p {
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: #2E4530;
+      word-break: keep-all;
+    }
+
+    .speech-tail {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 13px;
+      height: 13px;
+      background: var(--bg-ivory);
+      border-right: 2px solid var(--water);
+      border-bottom: 2px solid var(--water);
+    }
+
+    /* 순백색 일러스트 영역 */
+    .stage-viewport {
+      position: relative;
+      width: 100%;
+      background-color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 0;
+      overflow: hidden;
+    }
+
+    .droplet-layer {
+      position: absolute;
+      inset: 8px 0 auto 0;
+      height: 120px;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .droplet-item {
+      position: absolute;
+      top: 0;
+      font-size: 1.4rem;
+      animation: dropletFall 1.05s ease-in forwards;
+      user-select: none;
+    }
+
+    .stage-bounce-box {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      aspect-ratio: 1312 / 1199;
+      background-color: #FFFFFF;
+    }
+
+    .stage-breathe-box {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-color: #FFFFFF;
+    }
+
+    .stage-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+      opacity: 0;
+      z-index: 1;
+      pointer-events: none;
+      transition: opacity 0.72s ease-in-out;
+    }
+
+    .stage-img.active {
+      opacity: 1;
+      z-index: 10;
+    }
+
+    .stage-meta {
+      margin-top: 14px;
+      padding-top: 16px;
+      border-top: 1.5px solid #F0F6EA;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stage-header-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .badge-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1.5px solid;
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+    }
+
+    .env-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: var(--bg-ivory);
+      border: 1px solid #E4EFE0;
+      font-size: 0.76rem;
+      color: #62765C;
+    }
+
+    .total-counter {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+    }
+
+    .total-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .total-value {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      color: #2A688C;
+      line-height: 1;
+    }
+
+    .total-unit {
+      font-size: 1rem;
+      margin-left: 2px;
+    }
+
+    /* 연못 수위 게이지 */
+    .gauge-box {
+      background: var(--bg-ivory);
+      border: 1.5px solid #E2F1FB;
+      border-radius: 20px;
+      padding: 14px 16px;
+    }
+
+    .gauge-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 9px;
+      font-size: 0.84rem;
+    }
+
+    .gauge-title {
+      font-weight: 700;
+      color: #2F5D78;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .gauge-next {
+      color: #4D6C80;
+      font-weight: 500;
+    }
+
+    .gauge-next strong {
+      color: #226990;
+    }
+
+    .gauge-track {
+      width: 100%;
+      height: 18px;
+      border-radius: 999px;
+      background: #E5F2FA;
+      border: 1.5px solid #CDE6F6;
+      padding: 2px;
+      overflow: hidden;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #B7DFF7 0%, #86CEF3 55%, #B9E89C 100%);
+      transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      min-width: 6px;
+    }
+
+    .gauge-fill::after {
+      content: "";
+      position: absolute;
+      inset: 2px 4px auto 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .gauge-bottom {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.77rem;
+      color: var(--text-muted);
+    }
+
+    .step-dots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .step-dot {
+      height: 8px;
+      width: 8px;
+      border-radius: 999px;
+      background: #DCE7D7;
+      transition: all 0.28s ease;
+    }
+    .step-dot.reached {
+      width: 10px;
+      background: var(--green);
+    }
+    .step-dot.current {
+      width: 20px;
+      background: #68BCE8;
+    }
+
+    /* ========================
+       동적 결과 배너 카드
+    ======================== */
+    .result-card {
+      border-radius: 24px;
+      background: linear-gradient(135deg, #EDF9E4 0%, #EBF7FD 100%);
+      border: 2px solid var(--water);
+      box-shadow: var(--shadow-soft);
+      padding: 16px 20px;
+      animation: bubblePop 0.35s ease-out;
+    }
+
+    .result-card.level-up {
+      border-color: var(--green);
+      background: linear-gradient(135deg, #E8F8DC 0%, #FFF2F3 100%);
+    }
+
+    .result-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .result-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      border: 1.5px solid #CBE7F7;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #245F80;
+    }
+
+    .result-pill.up {
+      border-color: var(--coral);
+      color: var(--coral-deep);
+    }
+
+    .result-main {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.08rem;
+      color: #244B63;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .result-sub {
+      margin: 5px 0 0;
+      font-size: 0.85rem;
+      color: #46614A;
+      font-weight: 500;
+    }
+
+    /* ========================
+       우측 패널 카드 (활동 등록 & 기록)
+    ======================== */
+    .panel-card {
+      background: #FFFFFF;
+      border-radius: 28px;
+      border: 2px solid #E6F2DD;
+      box-shadow: var(--shadow-card);
+      padding: 20px;
+    }
+
+    @media (min-width: 640px) {
+      .panel-card {
+        padding: 24px;
+      }
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1.18rem;
+      color: var(--green-deep);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .panel-desc {
+      margin: 4px 0 0;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 16px 0 9px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #4F6449;
+    }
+
+    .step-badge-mini {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: #365C2A;
+      font-size: 0.72rem;
+    }
+
+    /* 활동 선택 카드 그리드 */
+    .activity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      padding: 4px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .activity-grid.error-highlight {
+      border-color: var(--coral);
+      background-color: var(--coral-soft);
+    }
+
+    .activity-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 11px 12px;
+      border-radius: 17px;
+      background: var(--bg-ivory);
+      border: 1.5px solid #DCECD1;
+      text-align: left;
+      transition: all 0.18s ease;
+    }
+
+    .activity-btn:hover {
+      background: var(--green-soft);
+      border-color: var(--green);
+      transform: translateY(-1px);
+    }
+
+    .activity-btn:active {
+      transform: scale(0.98);
+    }
+
+    .activity-btn.selected {
+      background: #E9F6FD;
+      border: 2px solid #75C3EC;
+      box-shadow: 0 4px 12px rgba(117, 195, 236, 0.22);
+    }
+
+    .activity-btn-full {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .activity-btn-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .activity-emoji {
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .activity-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #2F4429;
+    }
+
+    .activity-meta {
+      font-size: 0.73rem;
+      color: #5E765A;
+    }
+
+    .activity-btn.selected .activity-meta {
+      color: #2B6280;
+      font-weight: 600;
+    }
+
+    /* 슬라이더 & 입력 컨트롤 박스 */
+    .slider-panel {
+      margin-top: 14px;
+      border-radius: 20px;
+      background: var(--bg-ivory);
+      border: 1.5px solid #E1EFE0;
+      padding: 15px 16px;
+      transition: border-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .slider-panel.inactive {
+      opacity: 0.75;
+    }
+
+    .slider-panel.active {
+      border-color: var(--water);
+      background: #F6FBFE;
+    }
+
+    .slider-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .slider-picked {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #2B4E64;
+    }
+
+    .slider-preview-pill {
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--water);
+      color: #1F4E6B;
+      font-family: var(--font-display);
+      font-size: 0.86rem;
+    }
+
+    .custom-name-group {
+      margin-bottom: 12px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.77rem;
+      font-weight: 700;
+      color: #52674C;
+      margin-bottom: 5px;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 10px 13px;
+      border-radius: 13px;
+      background: #FFFFFF;
+      border: 1.5px solid #D8E8CE;
+      font-size: 0.88rem;
+      color: #2F422B;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: #77C4EA;
+      box-shadow: 0 0 0 3px rgba(183, 223, 247, 0.45);
+    }
+
+    .text-input.error-highlight {
+      border-color: var(--coral);
+      background: var(--coral-soft);
+      box-shadow: 0 0 0 3px rgba(255, 181, 186, 0.35);
+    }
+
+    .range-wrap {
+      padding: 4px 0 2px;
+    }
+
+    input[type="range"].water-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--water) 0%, var(--green) 100%);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"].water-slider:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    input[type="range"].water-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 4px solid #67BCE8;
+      box-shadow: 0 2px 8px rgba(42, 96, 127, 0.25);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"].water-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+
+    input[type="range"].water-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 4px solid #67BCE8;
+      box-shadow: 0 2px 8px rgba(42, 96, 127, 0.25);
+      cursor: pointer;
+    }
+
+    .range-bounds {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 7px;
+      font-size: 0.76rem;
+      color: #5D7460;
+    }
+
+    .range-current-desc {
+      font-weight: 700;
+      color: #246387;
+    }
+
+    .memo-group {
+      margin-top: 12px;
+    }
+
+    /* 유효성 오류 배너 */
+    .validation-msg {
+      margin-top: 12px;
+      padding: 10px 13px;
+      border-radius: 14px;
+      background: var(--coral-soft);
+      border: 1.5px solid var(--coral);
+      color: var(--coral-deep);
+      font-size: 0.83rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-submit-water {
+      width: 100%;
+      margin-top: 14px;
+      padding: 13px 18px;
+      border-radius: 18px;
+      border: 1.5px solid #A3DA82;
+      background: var(--green);
+      color: #264020;
+      font-family: var(--font-display);
+      font-size: 1.04rem;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.18s ease;
+    }
+
+    .btn-submit-water:hover {
+      background: #A6DF84;
+      transform: translateY(-2px);
+    }
+
+    .btn-submit-water:active {
+      transform: scale(0.98);
+    }
+
+    /* ========================
+       실천 기록 리스트
+    ======================== */
+    .history-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .count-pill {
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: var(--bg-ivory);
+      border: 1.5px solid #DCECD1;
+      font-size: 0.77rem;
+      font-weight: 700;
+      color: #52694C;
+      white-space: nowrap;
+    }
+
+    .history-empty {
+      border-radius: 18px;
+      background: var(--bg-ivory);
+      border: 1.5px dashed #D2E4C7;
+      padding: 28px 16px;
+      text-align: center;
+    }
+
+    .history-empty-icon {
+      font-size: 1.7rem;
+      margin: 0 0 6px;
+    }
+
+    .history-empty-title {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4E6348;
+    }
+
+    .history-empty-sub {
+      margin: 4px 0 0;
+      font-size: 0.78rem;
+      color: #7D9077;
+    }
+
+    .history-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      max-height: 310px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 17px;
+      background: var(--bg-ivory);
+      border: 1.5px solid #E5F1DE;
+      transition: background-color 0.16s ease;
+    }
+
+    .history-item:hover {
+      background: #F3FAEE;
+    }
+
+    .history-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .history-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .history-title {
+      font-size: 0.89rem;
+      font-weight: 700;
+      color: #2E4229;
+    }
+
+    .history-liters {
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: rgba(183, 223, 247, 0.65);
+      color: #215776;
+      font-family: var(--font-display);
+      font-size: 0.76rem;
+    }
+
+    .history-memo {
+      margin: 4px 0 0;
+      font-size: 0.78rem;
+      color: #5E7358;
+      word-break: break-word;
+    }
+
+    .history-date {
+      margin: 4px 0 0;
+      font-size: 0.71rem;
+      color: #889A82;
+    }
+
+    .btn-delete-log {
+      flex-shrink: 0;
+      padding: 5px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #A85A62;
+      font-size: 0.76rem;
+      font-weight: 600;
+      transition: all 0.16s ease;
+    }
+    .btn-delete-log:hover {
+      background: #FFE8EA;
+      border-color: var(--coral);
+    }
+
+    .history-footer {
+      margin-top: 14px;
+      padding-top: 13px;
+      border-top: 1.5px solid #EFF5EB;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .history-footer-note {
+      font-size: 0.74rem;
+      color: #85987F;
+    }
+
+    .btn-reset {
+      padding: 7px 13px;
+      border-radius: 12px;
+      background: #FFF4F5;
+      border: 1.5px solid #FFD1D5;
+      color: var(--coral-deep);
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: all 0.16s ease;
+    }
+    .btn-reset:hover:not(:disabled) {
+      background: #FFE4E7;
+    }
+    .btn-reset:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .reset-confirm-bar {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--coral-soft);
+      border: 1.5px solid var(--coral);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--coral-deep);
+      font-weight: 600;
+    }
+
+    .reset-confirm-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-confirm-yes {
+      padding: 5px 11px;
+      border-radius: 10px;
+      border: 1px solid #E58C95;
+      background: var(--coral);
+      color: #6B232B;
+      font-size: 0.77rem;
+      font-weight: 700;
+    }
+
+    .btn-confirm-no {
+      padding: 5px 11px;
+      border-radius: 10px;
+      border: 1px solid #D8E4D1;
+      background: #FFFFFF;
+      color: #4D6048;
+      font-size: 0.77rem;
+      font-weight: 600;
+    }
+
+    /* ========================
+       모달 (서비스 이야기 / 이용방법)
+    ======================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(54, 71, 48, 0.38);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      background: var(--bg-ivory);
+      border: 2.5px solid #DCECD0;
+      border-radius: 28px;
+      box-shadow: 0 22px 48px rgba(34, 54, 30, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-header {
+      background: #FFFFFF;
+      border-bottom: 1.5px solid #EAF3E3;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1.25rem;
+      color: var(--green-deep);
+    }
+
+    .modal-subtitle {
+      margin: 3px 0 0;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .btn-modal-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1.5px solid #E0ECD8;
+      background: var(--bg-ivory);
+      color: #53664E;
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.16s ease;
+    }
+    .btn-modal-close:hover {
+      background: var(--coral-soft);
+      border-color: var(--coral);
+      color: var(--coral-deep);
+    }
+
+    .modal-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      background: #FFFFFF;
+      border-top: 1.5px solid #EAF3E3;
+      padding: 13px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .modal-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 6px;
+      border-radius: 18px;
+      background: #FFFFFF;
+      border: 1.5px solid #E4EFE0;
+    }
+
+    .modal-tab-btn {
+      padding: 10px 12px;
+      border-radius: 13px;
+      border: none;
+      background: transparent;
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+      color: #62755C;
+      transition: all 0.18s ease;
+    }
+
+    .modal-tab-btn.active-green {
+      background: var(--green);
+      color: #284122;
+    }
+
+    .modal-tab-btn.active-water {
+      background: var(--water);
+      color: #204A64;
+    }
+
+    .info-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E4EFE0;
+      border-radius: 20px;
+      padding: 16px 18px;
+    }
+
+    .info-pill {
+      display: inline-block;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: #366227;
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .info-heading {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      color: var(--green-deep);
+    }
+
+    .info-text {
+      margin: 0;
+      font-size: 0.88rem;
+      color: #4D6047;
+      line-height: 1.65;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 11px;
+    }
+
+    @media (min-width: 600px) {
+      .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 11px;
+    }
+
+    @media (min-width: 600px) {
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .threat-card {
+      background: #FFFFFF;
+      border: 1.5px solid #FFE1E4;
+      border-radius: 18px;
+      padding: 14px 15px;
+    }
+
+    .threat-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 6px;
+    }
+
+    .threat-title {
+      margin: 0;
+      font-size: 0.96rem;
+      color: #9E424B;
+    }
+
+    .threat-desc {
+      margin: 0;
+      font-size: 0.82rem;
+      color: #52634D;
+      line-height: 1.55;
+    }
+
+    .impact-banner {
+      background: linear-gradient(120deg, #EBF7FD 0%, #EDF9E4 100%);
+      border: 2px solid var(--water);
+      border-radius: 20px;
+      padding: 16px 18px;
+      text-align: center;
+    }
+
+    .impact-main {
+      margin: 5px 0;
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      color: #214B65;
+    }
+
+    .impact-highlight {
+      color: #1A6A97;
+      text-decoration: underline;
+      text-decoration-color: var(--green);
+      text-decoration-thickness: 4px;
+      text-underline-offset: 4px;
+    }
+
+    .fact-card {
+      background: #FFFFFF;
+      border: 1.5px solid #DFEEF7;
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .fact-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .fact-name {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      color: var(--green-deep);
+    }
+
+    .fact-badge {
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--water-soft);
+      color: #246388;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .fact-analogy {
+      margin: 2px 0 0;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: var(--bg-ivory);
+      border: 1px solid #E7F2E2;
+      font-size: 0.77rem;
+      color: #2B688A;
+    }
+
+    .guide-step-card {
+      border-radius: 18px;
+      padding: 14px;
+      border: 1.5px solid;
+    }
+
+    .guide-step-badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      color: var(--text-main);
+    }
+
+    .roadmap-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .roadmap-table th {
+      padding: 8px 6px;
+      border-bottom: 1.5px solid #ECF3E6;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .roadmap-table td {
+      padding: 9px 6px;
+      border-bottom: 1px solid #F2F7EE;
+      font-size: 0.82rem;
+      vertical-align: middle;
+    }
+
+    .roadmap-row-current {
+      background: rgba(237, 249, 228, 0.75);
+    }
+
+    .roadmap-thumb {
+      width: 48px;
+      height: 44px;
+      border-radius: 10px;
+      background: #FFFFFF;
+      border: 1px solid #EAF2E4;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .roadmap-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .current-chip {
+      display: inline-block;
+      margin-left: 5px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: var(--green);
+      color: #25401F;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- 상단 토스트 알림 -->
+  <div id="toast-container" class="toast-container hidden" role="status" aria-live="polite">
+    <div class="toast-box">
+      <p id="toast-title" class="toast-title"></p>
+      <p id="toast-sub" class="toast-sub hidden"></p>
+    </div>
+  </div>
+
+  <!-- 1. 시작 페이지: 포구리 스토리텔링 인트로 화면 -->
+  <section id="intro-view" class="intro-screen" aria-label="포구리 오프닝 스토리">
+    <div class="pastel-blob pastel-blob-1" aria-hidden="true"></div>
+    <div class="pastel-blob pastel-blob-2" aria-hidden="true"></div>
+
+    <div class="intro-topbar">
+      <span class="intro-pill">
+        <span>🐸</span>
+        <span class="font-display">포구리 이야기</span>
+      </span>
+      <button id="btn-skip-intro" type="button" class="btn-skip">건너뛰기 &gt;</button>
+    </div>
+
+    <main class="intro-stage-wrap">
+      <div class="intro-stage-card">
+        <div class="intro-img-frame">
+          <img
+            src="./public/images/stage-1-가장힘듦.png"
+            alt="가뭄에 처한 1단계 가장힘듦 상태의 포구리"
+            class="animate-breathe"
+            draggable="false"
+          />
+        </div>
+      </div>
+    </main>
+
+    <div class="intro-dialogue-wrap">
+      <div id="intro-dialogue-box" class="dialogue-box clickable" tabindex="0" role="button" aria-label="다음 대사 보기">
+        <div class="dialogue-nametag">
+          <span>🐸</span>
+          <span>포구리</span>
+        </div>
+
+        <div id="intro-dots" class="dialogue-dots" aria-hidden="true"></div>
+
+        <p id="intro-text" class="dialogue-text animate-bubble"></p>
+
+        <div class="dialogue-footer">
+          <span id="intro-hint" class="dialogue-hint">대화창을 클릭해도 다음으로 넘어가요</span>
+          <div>
+            <button id="btn-intro-next" type="button" class="btn-intro-next">다음 ▸</button>
+            <button id="btn-intro-start" type="button" class="btn-intro-start hidden">포구리 도와주러 가기 💧</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 메인 화면 -->
+  <div id="main-view" class="main-shell hidden">
+    <header class="app-header container">
+      <div class="header-bar">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">🐸</div>
+          <div>
+            <h1 class="brand-title">포구리 연못 구하기</h1>
+            <p class="brand-sub">작은 물 절약으로 되살아나는 동화 속 습지</p>
+          </div>
+        </div>
+
+        <nav class="header-nav" aria-label="서비스 안내 메뉴">
+          <button id="btn-open-story" type="button" class="nav-btn nav-btn-story">🐸 서비스 이야기</button>
+          <button id="btn-open-guide" type="button" class="nav-btn nav-btn-guide">❓ 이용방법</button>
+          <button id="btn-replay-intro" type="button" class="nav-btn nav-btn-replay">인트로 다시 보기</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="main-grid">
+        <!-- 왼쪽: 8단계 포구리 순백색 스테이지 & 연못 수위 게이지 & 동적 결과 카드 -->
+        <div class="stack-col">
+          <section class="stage-card" aria-label="포구리 연못 회복 스테이지">
+            <div class="speech-wrap">
+              <div id="stage-speech-bubble" class="speech-bubble animate-bubble">
+                <p id="stage-speech-text">“너무 목마르고 힘들어요...”</p>
+                <span class="speech-tail" aria-hidden="true"></span>
+              </div>
+            </div>
+
+            <div class="stage-viewport">
+              <div id="droplet-layer" class="droplet-layer" aria-hidden="true"></div>
+              <div id="stage-bounce-box" class="stage-bounce-box">
+                <div class="stage-breathe-box animate-breathe" id="stage-img-stack"></div>
+              </div>
+            </div>
+
+            <div class="stage-meta">
+              <div class="stage-header-row">
+                <div class="badge-group">
+                  <span id="stage-badge" class="stage-badge">1단계 · 가장힘듦</span>
+                  <span id="stage-env-tag" class="env-tag">바짝 마른 땅</span>
+                </div>
+
+                <div class="total-counter">
+                  <span class="total-label">총 누적 절약량</span>
+                  <span class="total-value">
+                    <span id="total-liters-text">0</span><span class="total-unit">L</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="gauge-box">
+                <div class="gauge-top">
+                  <span class="gauge-title"><span>💧</span><span>연못 수위 게이지</span></span>
+                  <span id="gauge-next-text" class="gauge-next"></span>
+                </div>
+
+                <div
+                  id="gauge-progressbar"
+                  class="gauge-track"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  aria-label="다음 단계까지 연못 수위 게이지"
+                >
+                  <div id="gauge-fill" class="gauge-fill" style="width: 4%;"></div>
+                </div>
+
+                <div class="gauge-bottom">
+                  <span id="gauge-summary-text">현재 구간: 0 ~ 29L · 2L 생수 약 0병 절약</span>
+                  <div id="stage-step-dots" class="step-dots" aria-label="8단계 회복 진행도"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 동적 결과 카드 (물 절약 실천 시 즉시 표시) -->
+          <section id="result-card" class="result-card hidden" aria-live="polite" aria-label="물 절약 실천 결과">
+            <div class="result-top">
+              <span id="result-pill" class="result-pill">💧 포구리에게 물이 전해졌어요!</span>
+              <span id="result-action-name" style="font-size:0.78rem; color:#4D6B7D; font-weight:700;"></span>
+            </div>
+            <p id="result-main-text" class="result-main"></p>
+            <p id="result-sub-text" class="result-sub"></p>
+          </section>
+        </div>
+
+        <!-- 오른쪽: 활동 선택 & 슬라이더 조작 + 실천 기록 -->
+        <div class="stack-col">
+          <section class="panel-card" aria-label="오늘의 물 절약 활동 입력">
+            <h2 class="panel-title"><span>💧</span><span>오늘의 물 절약 실천하기</span></h2>
+            <p class="panel-desc">활동을 고르고 슬라이더를 움직여 포구리에게 물을 선물해 주세요.</p>
+
+            <form id="water-form" novalidate>
+              <div class="section-label">
+                <span>1. 물 절약 활동 선택</span>
+                <span class="step-badge-mini">필수 선택</span>
+              </div>
+
+              <div id="activity-grid" class="activity-grid" role="radiogroup" aria-label="물 절약 활동 선택"></div>
+
+              <div class="section-label" style="margin-top:16px;">
+                <span>2. 절약량 조절하기</span>
+                <span class="step-badge-mini">실시간 계산</span>
+              </div>
+
+              <div id="slider-panel" class="slider-panel inactive">
+                <div class="slider-header">
+                  <span id="slider-picked-label" class="slider-picked">먼저 위에서 활동을 선택해 주세요</span>
+                  <span id="slider-preview-pill" class="slider-preview-pill">예상 +0L</span>
+                </div>
+
+                <div id="custom-name-group" class="custom-name-group hidden">
+                  <label for="custom-title-input" class="input-label">직접 입력 활동명 <span style="color:#C24C58;">*</span></label>
+                  <input
+                    id="custom-title-input"
+                    type="text"
+                    maxlength="40"
+                    class="text-input"
+                    placeholder="예: 쌀뜨물로 화분 물주기, 빗물 받아 청소하기"
+                  />
+                </div>
+
+                <div class="range-wrap">
+                  <input
+                    id="amount-slider"
+                    type="range"
+                    class="water-slider"
+                    min="1"
+                    max="15"
+                    step="1"
+                    value="1"
+                    disabled
+                    aria-label="물 절약 강도 또는 절약량 슬라이더"
+                  />
+                  <div class="range-bounds">
+                    <span id="range-min-label">-</span>
+                    <span id="range-current-desc" class="range-current-desc">활동을 선택하면 조절할 수 있어요</span>
+                    <span id="range-max-label">-</span>
+                  </div>
+                </div>
+
+                <div class="memo-group">
+                  <label for="memo-input" class="input-label">한 줄 소감 <span style="color:#85987F; font-weight:500;">(선택)</span></label>
+                  <input
+                    id="memo-input"
+                    type="text"
+                    maxlength="60"
+                    class="text-input"
+                    placeholder="오늘 실천한 느낌을 짧게 남겨보세요"
+                  />
+                </div>
+              </div>
+
+              <div id="validation-msg" class="validation-msg hidden" role="alert">
+                <span>⚠️</span>
+                <span id="validation-text"></span>
+              </div>
+
+              <button type="submit" class="btn-submit-water">포구리에게 물 전해주기 💧</button>
+            </form>
+          </section>
+
+          <section class="panel-card" aria-label="최근 물 절약 실천 기록">
+            <div class="history-header">
+              <div>
+                <h2 class="panel-title"><span>📒</span><span>나의 실천 기록</span></h2>
+                <p class="panel-desc">기록은 이 브라우저(localStorage)에 자동 저장돼요.</p>
+              </div>
+              <span id="history-count-pill" class="count-pill">총 0건</span>
+            </div>
+
+            <div id="history-empty" class="history-empty">
+              <p class="history-empty-icon">🌱</p>
+              <p class="history-empty-title">아직 기록된 물 절약 활동이 없어요.</p>
+              <p class="history-empty-sub">위에서 활동을 선택해 포구리에게 첫 물방울을 전해주세요!</p>
+            </div>
+
+            <ul id="history-list" class="history-list hidden"></ul>
+
+            <div class="history-footer">
+              <span class="history-footer-note">개별 기록 삭제 및 전체 초기화 가능</span>
+              <button id="btn-reset-request" type="button" class="btn-reset" disabled>초기화</button>
+            </div>
+
+            <div id="reset-confirm-bar" class="reset-confirm-bar hidden">
+              <span>모든 실천 기록과 수위를 초기화할까요?</span>
+              <div class="reset-confirm-actions">
+                <button id="btn-reset-confirm" type="button" class="btn-confirm-yes">네, 초기화</button>
+                <button id="btn-reset-cancel" type="button" class="btn-confirm-no">취소</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 모달 1: 서비스 이야기 -->
+  <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h2 id="story-modal-title" class="modal-title">🐸 포구리 서비스 이야기</h2>
+          <p class="modal-subtitle">작은 개구리와 우리의 물 절약이 만나는 이유</p>
+        </div>
+        <button type="button" class="btn-modal-close" data-close-modal="story-modal" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-tabs" role="tablist">
+          <button id="tab-why-btn" type="button" class="modal-tab-btn active-green" role="tab" aria-selected="true">
+            왜 포구리(개구리)인가요?
+          </button>
+          <button id="tab-impact-btn" type="button" class="modal-tab-btn" role="tab" aria-selected="false">
+            일상 속 물 절약의 큰 힘
+          </button>
+        </div>
+
+        <div id="tab-why-panel" class="stack-col" style="gap:14px;">
+          <div class="info-card">
+            <span class="info-pill">이름의 의미 · Frog + 개구리 = 포구리</span>
+            <h3 class="info-heading">습지의 건강을 가장 먼저 알려주는 ‘환경 지표종’, 개구리</h3>
+            <p class="info-text">
+              <strong>포구리</strong>는 영어 <em>Frog</em>와 한글 <em>개구리</em>를 합쳐 만든 이름이에요.
+              양서류인 개구리는 물과 육지를 오가며 살아가는 대표적인 <strong>환경 지표종</strong>으로,
+              기후 변화나 가뭄, 수질 오염 같은 환경 변화에 가장 민감하게 반응합니다.
+              포구리의 연못을 지키는 일은 곧 우리의 물과 자연을 지키는 일과 이어져 있어요.
+            </p>
+          </div>
+
+          <div>
+            <h4 class="info-heading" style="margin-bottom:10px;">비가 내리지 않고 연못이 마르면 어떤 일이 벌어질까요?</h4>
+            <div id="threats-grid" class="grid-2"></div>
+          </div>
+        </div>
+
+        <div id="tab-impact-panel" class="stack-col hidden" style="gap:14px;">
+          <div class="impact-banner">
+            <p style="margin:0; font-size:0.78rem; font-weight:700; color:#2E6280;">나의 물 절약 발자취</p>
+            <p class="impact-main">
+              지금까지 2L 생수 <span id="modal-bottle-count" class="impact-highlight">0병</span>만큼의 물을 아꼈어요!
+            </p>
+            <p id="modal-bathtub-summary" style="margin:0; font-size:0.79rem; color:#506E81;">
+              현재 총 누적 절약량: 0L (일반 욕조 200L 기준 약 0.00개 분량)
+            </p>
+          </div>
+
+          <div>
+            <h4 class="info-heading" style="margin-bottom:10px;">사소한 습관이 모여 만드는 놀라운 변화</h4>
+            <div id="facts-grid" class="grid-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-modal-replay" type="button" class="nav-btn nav-btn-story">🎬 인트로 다시 보기</button>
+        <button type="button" class="nav-btn nav-btn-guide" data-close-modal="story-modal">연못으로 돌아가기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 모달 2: 이용방법 -->
+  <div id="guide-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="guide-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h2 id="guide-modal-title" class="modal-title">❓ 포구리 연못 이용방법</h2>
+          <p class="modal-subtitle">3단계로 쉽게 시작하는 물 절약 환경 회복 여정</p>
+        </div>
+        <button type="button" class="btn-modal-close" data-close-modal="guide-modal" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="guide-steps-grid" class="grid-3"></div>
+
+        <div class="info-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;">
+            <h3 class="info-heading" style="margin:0;">🌿 8단계 포구리 연못 회복 로드맵</h3>
+            <span id="guide-current-stage-label" style="font-size:0.78rem; color:#6D8067; font-weight:700;">현재 1단계</span>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="roadmap-table">
+              <thead>
+                <tr>
+                  <th>모습</th>
+                  <th>단계명</th>
+                  <th>누적 절약량</th>
+                  <th>포구리의 한마디</th>
+                </tr>
+              </thead>
+              <tbody id="roadmap-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span style="font-size:0.78rem; color:#6B7E65;">400L를 달성하면 포구리의 완벽한 오아시스를 만날 수 있어요!</span>
+        <button type="button" class="nav-btn nav-btn-story" data-close-modal="guide-modal">좋아요, 실천해 볼게요!</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var STORAGE_KEYS = {
+        INTRO_SEEN: 'poguri_intro_seen_v1',
+        LOGS: 'poguri_water_logs_v1'
+      };
+
+      var INTRO_DIALOGUES = [
+        '안녕하세요... 저는 이곳 습지에 사는 개구리, 포구리에요.',
+        '요즘 비가 오지 않아서 내가 살던 연못이 이렇게 바짝 말라버렸어요...',
+        '이렇게 물이 말라버리면, 먹이도 사라지고 피부도 건조해져가요…',
+        '그런데 여러분의 일상생활 속 작은 물 절약만으로도 내 연못에 물이 다시 모인대요!',
+        '제가 다시 푸른 연못에서 웃을 수 있도록, 오늘부터 작은 물 절약으로 저를 도와주실 수 있나요..?'
+      ];
+
+      var RECOVERY_STAGES = [
+        {
+          stage: 1,
+          name: '가장힘듦',
+          minL: 0,
+          maxL: 29,
+          rangeLabel: '0 ~ 29L',
+          image: './public/images/stage-1-가장힘듦.png',
+          message: '너무 목마르고 힘들어요...',
+          envTag: '바짝 마른 땅',
+          badgeBg: '#FFE4E6',
+          badgeText: '#B44A54',
+          badgeBorder: '#FFB5BA'
+        },
+        {
+          stage: 2,
+          name: '힘듦',
+          minL: 30,
+          maxL: 59,
+          rangeLabel: '30 ~ 59L',
+          image: './public/images/stage-2-힘듦.png',
+          message: '땅이 아직 메말라 있어요. 조금만 더 도와주세요!',
+          envTag: '갈라진 흙바닥',
+          badgeBg: '#FFF0E0',
+          badgeText: '#A85D2C',
+          badgeBorder: '#F6CFA7'
+        },
+        {
+          stage: 3,
+          name: '나쁨',
+          minL: 60,
+          maxL: 99,
+          rangeLabel: '60 ~ 99L',
+          image: './public/images/stage-3-나쁨.png',
+          message: '와! 바닥에 작은 새싹이 돋아나기 시작했어요!',
+          envTag: '첫 새싹의 기운',
+          badgeBg: '#F5F9D8',
+          badgeText: '#667827',
+          badgeBorder: '#DCE89D'
+        },
+        {
+          stage: 4,
+          name: '아쉬움',
+          minL: 100,
+          maxL: 149,
+          rangeLabel: '100 ~ 149L',
+          image: './public/images/stage-4-아쉬움.png',
+          message: '조금씩 물웅덩이가 생기고 있어요!',
+          envTag: '촉촉한 작은 물웅덩이',
+          badgeBg: '#E9F6FC',
+          badgeText: '#2E6E8E',
+          badgeBorder: '#B7DFF7'
+        },
+        {
+          stage: 5,
+          name: '보통',
+          minL: 150,
+          maxL: 219,
+          rangeLabel: '150 ~ 219L',
+          image: './public/images/stage-5-보통.png',
+          message: '물웅덩이가 넓어져서 기분이 한결 나아졌어요!',
+          envTag: '넓어지는 물웅덩이',
+          badgeBg: '#E2F4FD',
+          badgeText: '#25698B',
+          badgeBorder: '#9AD2F2'
+        },
+        {
+          stage: 6,
+          name: '좋음',
+          minL: 220,
+          maxL: 299,
+          rangeLabel: '220 ~ 299L',
+          image: './public/images/stage-6-좋음.png',
+          message: '발밑에 연못이 생겼어요! 연잎도 자라고 있어요!',
+          envTag: '연잎이 핀 연못',
+          badgeBg: '#E6F7DA',
+          badgeText: '#3B6D26',
+          badgeBorder: '#B9E89C'
+        },
+        {
+          stage: 7,
+          name: '행복',
+          minL: 300,
+          maxL: 399,
+          rangeLabel: '300 ~ 399L',
+          image: './public/images/stage-7-행복.png',
+          message: '연못이 정말 풍성해졌어요! 너무 행복해요!',
+          envTag: '풍성한 초록 연못',
+          badgeBg: '#DCF5CE',
+          badgeText: '#2F631D',
+          badgeBorder: '#9FE07B'
+        },
+        {
+          stage: 8,
+          name: '가장행복',
+          minL: 400,
+          maxL: null,
+          rangeLabel: '400L 이상',
+          image: './public/images/stage-8-가장행복.png',
+          message: '고마워요! 덕분에 완벽한 오아시스가 되었어요!',
+          envTag: '완벽한 오아시스',
+          badgeBg: '#FFE7EA',
+          badgeText: '#B3434E',
+          badgeBorder: '#FFB5BA'
+        }
+      ];
+
+      var ACTIVITIES = [
+        {
+          id: 'cup',
+          title: '양치컵 사용하기',
+          emoji: '🪥',
+          unit: '회',
+          min: 1,
+          max: 10,
+          step: 1,
+          defaultVal: 2,
+          perUnitL: 6,
+          hint: '회당 약 6L 절약 (5~11L)'
+        },
+        {
+          id: 'shower',
+          title: '샤워 시간 줄이기',
+          emoji: '🚿',
+          unit: '분',
+          min: 1,
+          max: 15,
+          step: 1,
+          defaultVal: 3,
+          perUnitL: 12,
+          hint: '1분 단축 시 12L 절약'
+        },
+        {
+          id: 'dish',
+          title: '설거지통 쓰기',
+          emoji: '🫧',
+          unit: '회',
+          min: 1,
+          max: 5,
+          step: 1,
+          defaultVal: 1,
+          perUnitL: 20,
+          hint: '회당 약 20L 절약'
+        },
+        {
+          id: 'laundry',
+          title: '빨래 모아서 하기',
+          emoji: '🧺',
+          unit: '회',
+          min: 1,
+          max: 4,
+          step: 1,
+          defaultVal: 1,
+          perUnitL: 30,
+          hint: '회당 약 30L 절약'
+        },
+        {
+          id: 'custom',
+          title: '직접 입력하기',
+          emoji: '✏️',
+          unit: 'L',
+          min: 5,
+          max: 100,
+          step: 1,
+          defaultVal: 15,
+          perUnitL: 1,
+          hint: '활동 이름과 절약량(5~100L)을 자유롭게 조절해요',
+          fullWidth: true
+        }
+      ];
+
+      var FROG_THREATS = [
+        {
+          icon: '🫧',
+          title: '질식 및 탈수',
+          desc: '개구리는 수분 보호막이 없어 피부가 마르면 피부 호흡이 멈추고 체내 수분이 빠르게 증발해 폐사합니다.'
+        },
+        {
+          icon: '🥚',
+          title: '번식 실패',
+          desc: '산란할 물웅덩이가 사라지고, 성체로 자라기 전의 올챙이들이 말라 죽어 세대가 단절됩니다.'
+        },
+        {
+          icon: '⚠️',
+          title: '질병 및 천적 노출',
+          desc: '남은 물에 개체가 몰리면서 전염병(항아리곰팡이병 등)이 퍼지기 쉽고, 고립되어 천적의 먹잇감이 됩니다.'
+        },
+        {
+          icon: '🌿',
+          title: '멸종 위기 심화',
+          desc: '가뭄과 습지 파괴로 인해 국내의 ‘수원청개구리’나 해외의 ‘황금두꺼비’처럼 멸종 위기에 처하거나 실제로 멸종하는 사례가 발생합니다.'
+        }
+      ];
+
+      var WATER_FACTS = [
+        {
+          emoji: '🪥',
+          action: '양치컵 사용',
+          perUse: '회당 5~11L 절약',
+          detail: '수도꼭지를 잠그고 양치컵을 쓰면 하루 3회 기준 한 달 약 450~990L를 아껴요.',
+          analogy: '2L 생수병 최대 495병 분량'
+        },
+        {
+          emoji: '🚿',
+          action: '샤워 시간 단축',
+          perUse: '1분 단축 시 12L 절약',
+          detail: '매일 샤워 시간을 3분만 줄여도 한 달에 1,080L의 물을 절약할 수 있어요.',
+          analogy: '일반 욕조(200L) 약 5.4개 분량'
+        },
+        {
+          emoji: '🍽️',
+          action: '설거지통 활용',
+          perUse: '회당 20L 절약',
+          detail: '흐르는 물 대신 설거지통에 물을 받아 씻으면 하루 2회 기준 한 달 1,200L 절약!',
+          analogy: '2L 생수병 600병 · 욕조 6개 분량'
+        },
+        {
+          emoji: '🚽',
+          action: '변기 수조 절수기 사용',
+          perUse: '회당 2~3L 절약',
+          detail: '변기 수조에 절수기(또는 물 채운 페트병)를 넣으면 하루 5회 기준 한 달 최대 450L 절약!',
+          analogy: '2L 생수병 최대 225병 분량'
+        }
+      ];
+
+      var GUIDE_STEPS = [
+        {
+          step: 'Step 1',
+          emoji: '✍️',
+          title: '물 절약 활동 기록하기',
+          desc: '오늘 실천한 물 절약 활동을 고르거나 직접 기록해요.',
+          bg: '#E9F6FC',
+          border: '#B7DFF7'
+        },
+        {
+          step: 'Step 2',
+          emoji: '💧',
+          title: '연못 수위 차오르기',
+          desc: '아낀 물(L)만큼 연못 수위가 차오르고 포구리의 모습이 변해요.',
+          bg: '#EDF9E4',
+          border: '#B9E89C'
+        },
+        {
+          step: 'Step 3',
+          emoji: '🪷',
+          title: '푸른 연못 선물하기',
+          desc: '꾸준한 기록으로 가뭄 속 포구리에게 푸른 연못을 선물해 주세요!',
+          bg: '#FFF0F1',
+          border: '#FFB5BA'
+        }
+      ];
+
+      /* 상태 */
+      var state = {
+        introIndex: 0,
+        introSeen: false,
+        logs: [],
+        selectedActivityId: null,
+        sliderValue: 1,
+        lastStageNumber: 1,
+        toastTimer: null
+      };
+
+      /* 유틸 */
+      function loadIntroSeen() {
+        try {
+          return localStorage.getItem(STORAGE_KEYS.INTRO_SEEN) === 'true';
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function saveIntroSeen(seen) {
+        try {
+          localStorage.setItem(STORAGE_KEYS.INTRO_SEEN, seen ? 'true' : 'false');
+        } catch (e) {
+          /* ignore storage quota errors */
+        }
+      }
+
+      function loadLogs() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEYS.LOGS);
+          if (!raw) return [];
+          var parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return [];
+          return parsed.filter(function (item) {
+            return item && typeof item.title === 'string' && Number(item.liters) > 0;
+          });
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveLogs(logs) {
+        try {
+          localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(logs));
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      function getTotalLiters() {
+        var sum = state.logs.reduce(function (acc, item) {
+          return acc + (Number(item.liters) || 0);
+        }, 0);
+        return Math.round(sum * 10) / 10;
+      }
+
+      function getStageProgress(totalLiters) {
+        var safe = Math.max(0, Number(totalLiters) || 0);
+        var idx = 0;
+        for (var i = RECOVERY_STAGES.length - 1; i >= 0; i--) {
+          if (safe >= RECOVERY_STAGES[i].minL) {
+            idx = i;
+            break;
+          }
+        }
+        var current = RECOVERY_STAGES[idx];
+        var next = RECOVERY_STAGES[idx + 1] || null;
+        var remaining = next ? Math.max(0, Math.round((next.minL - safe) * 10) / 10) : 0;
+        var span = next ? next.minL - current.minL : 1;
+        var percent = next
+          ? Math.min(100, Math.max(0, ((safe - current.minL) / span) * 100))
+          : 100;
+        return {
+          current: current,
+          next: next,
+          remaining: remaining,
+          percent: percent,
+          isMax: !next
+        };
+      }
+
+      function formatBottles(liters) {
+        var count = liters / 2;
+        return Number.isInteger(count) ? count.toLocaleString() : count.toFixed(1);
+      }
+
+      function formatKoreanDate(isoStr) {
+        var d = new Date(isoStr);
+        if (isNaN(d.getTime())) return '방금 전';
+        var m = d.getMonth() + 1;
+        var day = d.getDate();
+        var hh = String(d.getHours()).padStart(2, '0');
+        var mm = String(d.getMinutes()).padStart(2, '0');
+        return m + '월 ' + day + '일 ' + hh + ':' + mm;
+      }
+
+      function getSelectedActivity() {
+        for (var i = 0; i < ACTIVITIES.length; i++) {
+          if (ACTIVITIES[i].id === state.selectedActivityId) {
+            return ACTIVITIES[i];
+          }
+        }
+        return null;
+      }
+
+      function computeSliderLiters(activity, val) {
+        if (!activity) return 0;
+        return Math.round(val * activity.perUnitL * 10) / 10;
+      }
+
+      /* DOM 캐싱 */
+      var el = {
+        introView: document.getElementById('intro-view'),
+        mainView: document.getElementById('main-view'),
+        btnSkipIntro: document.getElementById('btn-skip-intro'),
+        introDialogueBox: document.getElementById('intro-dialogue-box'),
+        introDots: document.getElementById('intro-dots'),
+        introText: document.getElementById('intro-text'),
+        introHint: document.getElementById('intro-hint'),
+        btnIntroNext: document.getElementById('btn-intro-next'),
+        btnIntroStart: document.getElementById('btn-intro-start'),
+
+        toastContainer: document.getElementById('toast-container'),
+        toastTitle: document.getElementById('toast-title'),
+        toastSub: document.getElementById('toast-sub'),
+
+        stageSpeechBubble: document.getElementById('stage-speech-bubble'),
+        stageSpeechText: document.getElementById('stage-speech-text'),
+        dropletLayer: document.getElementById('droplet-layer'),
+        stageBounceBox: document.getElementById('stage-bounce-box'),
+        stageImgStack: document.getElementById('stage-img-stack'),
+        stageBadge: document.getElementById('stage-badge'),
+        stageEnvTag: document.getElementById('stage-env-tag'),
+        totalLitersText: document.getElementById('total-liters-text'),
+        gaugeNextText: document.getElementById('gauge-next-text'),
+        gaugeProgressbar: document.getElementById('gauge-progressbar'),
+        gaugeFill: document.getElementById('gauge-fill'),
+        gaugeSummaryText: document.getElementById('gauge-summary-text'),
+        stageStepDots: document.getElementById('stage-step-dots'),
+
+        resultCard: document.getElementById('result-card'),
+        resultPill: document.getElementById('result-pill'),
+        resultActionName: document.getElementById('result-action-name'),
+        resultMainText: document.getElementById('result-main-text'),
+        resultSubText: document.getElementById('result-sub-text'),
+
+        waterForm: document.getElementById('water-form'),
+        activityGrid: document.getElementById('activity-grid'),
+        sliderPanel: document.getElementById('slider-panel'),
+        sliderPickedLabel: document.getElementById('slider-picked-label'),
+        sliderPreviewPill: document.getElementById('slider-preview-pill'),
+        customNameGroup: document.getElementById('custom-name-group'),
+        customTitleInput: document.getElementById('custom-title-input'),
+        amountSlider: document.getElementById('amount-slider'),
+        rangeMinLabel: document.getElementById('range-min-label'),
+        rangeCurrentDesc: document.getElementById('range-current-desc'),
+        rangeMaxLabel: document.getElementById('range-max-label'),
+        memoInput: document.getElementById('memo-input'),
+        validationMsg: document.getElementById('validation-msg'),
+        validationText: document.getElementById('validation-text'),
+
+        historyCountPill: document.getElementById('history-count-pill'),
+        historyEmpty: document.getElementById('history-empty'),
+        historyList: document.getElementById('history-list'),
+        btnResetRequest: document.getElementById('btn-reset-request'),
+        resetConfirmBar: document.getElementById('reset-confirm-bar'),
+        btnResetConfirm: document.getElementById('btn-reset-confirm'),
+        btnResetCancel: document.getElementById('btn-reset-cancel'),
+
+        btnOpenStory: document.getElementById('btn-open-story'),
+        btnOpenGuide: document.getElementById('btn-open-guide'),
+        btnReplayIntro: document.getElementById('btn-replay-intro'),
+
+        storyModal: document.getElementById('story-modal'),
+        guideModal: document.getElementById('guide-modal'),
+        tabWhyBtn: document.getElementById('tab-why-btn'),
+        tabImpactBtn: document.getElementById('tab-impact-btn'),
+        tabWhyPanel: document.getElementById('tab-why-panel'),
+        tabImpactPanel: document.getElementById('tab-impact-panel'),
+        threatsGrid: document.getElementById('threats-grid'),
+        factsGrid: document.getElementById('facts-grid'),
+        modalBottleCount: document.getElementById('modal-bottle-count'),
+        modalBathtubSummary: document.getElementById('modal-bathtub-summary'),
+        btnModalReplay: document.getElementById('btn-modal-replay'),
+
+        guideStepsGrid: document.getElementById('guide-steps-grid'),
+        guideCurrentStageLabel: document.getElementById('guide-current-stage-label'),
+        roadmapTbody: document.getElementById('roadmap-tbody')
+      };
+
+      /* 토스트 */
+      function showToast(title, sub) {
+        if (state.toastTimer) {
+          clearTimeout(state.toastTimer);
+        }
+        el.toastTitle.textContent = title;
+        if (sub) {
+          el.toastSub.textContent = sub;
+          el.toastSub.classList.remove('hidden');
+        } else {
+          el.toastSub.classList.add('hidden');
+        }
+        el.toastContainer.classList.remove('hidden');
+        var box = el.toastContainer.firstElementChild;
+        box.style.animation = 'none';
+        void box.offsetWidth;
+        box.style.animation = '';
+
+        state.toastTimer = setTimeout(function () {
+          el.toastContainer.classList.add('hidden');
+        }, 3200);
+      }
+
+      /* 인트로 렌더링 */
+      function renderIntro() {
+        var idx = state.introIndex;
+        var isLast = idx === INTRO_DIALOGUES.length - 1;
+
+        el.introDots.innerHTML = '';
+        for (var i = 0; i < INTRO_DIALOGUES.length; i++) {
+          var dot = document.createElement('span');
+          dot.className = 'dialogue-dot' + (i === idx ? ' active' : i < idx ? ' done' : '');
+          el.introDots.appendChild(dot);
+        }
+
+        el.introText.textContent = '“' + INTRO_DIALOGUES[idx] + '”';
+        el.introText.classList.remove('animate-bubble');
+        void el.introText.offsetWidth;
+        el.introText.classList.add('animate-bubble');
+
+        if (isLast) {
+          el.introDialogueBox.classList.remove('clickable');
+          el.introHint.textContent = '버튼을 눌러 포구리의 연못으로 이동해요';
+          el.btnIntroNext.classList.add('hidden');
+          el.btnIntroStart.classList.remove('hidden');
+        } else {
+          el.introDialogueBox.classList.add('clickable');
+          el.introHint.textContent = '대화창을 클릭해도 다음으로 넘어가요';
+          el.btnIntroNext.classList.remove('hidden');
+          el.btnIntroStart.classList.add('hidden');
+        }
+      }
+
+      function openMainView(markSeen) {
+        if (markSeen) {
+          saveIntroSeen(true);
+          state.introSeen = true;
+        }
+        el.introView.classList.add('hidden');
+        el.mainView.classList.remove('hidden');
+        renderStage(false);
+        renderHistory();
+      }
+
+      function openIntroView() {
+        closeAllModals();
+        state.introIndex = 0;
+        renderIntro();
+        el.mainView.classList.add('hidden');
+        el.introView.classList.remove('hidden');
+      }
+
+      /* 8단계 이미지 스택 & 미니 도트 초기화 */
+      function initStageStaticNodes() {
+        el.stageImgStack.innerHTML = '';
+        el.stageStepDots.innerHTML = '';
+
+        RECOVERY_STAGES.forEach(function (st) {
+          var img = document.createElement('img');
+          img.src = st.image;
+          img.alt = st.stage + '단계 ' + st.name + ' 상태의 포구리';
+          img.className = 'stage-img' + (st.stage === 1 ? ' active' : '');
+          img.draggable = false;
+          img.dataset.stage = String(st.stage);
+          el.stageImgStack.appendChild(img);
+
+          var dot = document.createElement('span');
+          dot.className = 'step-dot';
+          dot.title = st.stage + '단계 ' + st.name + ' (' + st.rangeLabel + ')';
+          dot.dataset.stage = String(st.stage);
+          el.stageStepDots.appendChild(dot);
+        });
+      }
+
+      /* 물방울 + 통통 튀는 애니메이션 트리거 */
+      function triggerWaterEffect() {
+        el.stageBounceBox.classList.remove('animate-bounce');
+        void el.stageBounceBox.offsetWidth;
+        el.stageBounceBox.classList.add('animate-bounce');
+
+        el.dropletLayer.innerHTML = '';
+        var drops = [
+          { left: '22%', delay: '0ms' },
+          { left: '38%', delay: '110ms' },
+          { left: '52%', delay: '50ms' },
+          { left: '66%', delay: '170ms' },
+          { left: '78%', delay: '90ms' }
+        ];
+        drops.forEach(function (d) {
+          var span = document.createElement('span');
+          span.className = 'droplet-item';
+          span.textContent = '💧';
+          span.style.left = d.left;
+          span.style.animationDelay = d.delay;
+          el.dropletLayer.appendChild(span);
+        });
+      }
+
+      /* 스테이지 렌더링 */
+      function renderStage(animateChange) {
+        var total = getTotalLiters();
+        var progress = getStageProgress(total);
+        var st = progress.current;
+
+        /* 이미지 크로스페이드 */
+        var imgs = el.stageImgStack.querySelectorAll('.stage-img');
+        imgs.forEach(function (img) {
+          if (Number(img.dataset.stage) === st.stage) {
+            img.classList.add('active');
+          } else {
+            img.classList.remove('active');
+          }
+        });
+
+        /* 말풍선 */
+        var speechChanged = state.lastStageNumber !== st.stage;
+        el.stageSpeechText.textContent = '“' + st.message + '”';
+        if (speechChanged) {
+          el.stageSpeechBubble.classList.remove('animate-bubble');
+          void el.stageSpeechBubble.offsetWidth;
+          el.stageSpeechBubble.classList.add('animate-bubble');
+        }
+        state.lastStageNumber = st.stage;
+
+        /* 배지 & 수치 */
+        el.stageBadge.textContent = st.stage + '단계 · ' + st.name;
+        el.stageBadge.style.backgroundColor = st.badgeBg;
+        el.stageBadge.style.color = st.badgeText;
+        el.stageBadge.style.borderColor = st.badgeBorder;
+
+        el.stageEnvTag.textContent = st.envTag;
+        el.totalLitersText.textContent = total.toLocaleString();
+
+        /* 게이지 */
+        if (progress.isMax) {
+          el.gaugeNextText.innerHTML = '<strong style="color:#2D6E48;">완벽한 오아시스 달성! (400L 이상)</strong>';
+        } else {
+          el.gaugeNextText.innerHTML =
+            '다음 단계 <strong>[' + progress.next.name + ']</strong>까지 <strong>' + progress.remaining + 'L</strong> 남았어요';
+        }
+
+        var barWidth = Math.max(4, Math.round(progress.percent));
+        el.gaugeFill.style.width = barWidth + '%';
+        el.gaugeProgressbar.setAttribute('aria-valuenow', String(Math.round(progress.percent)));
+
+        el.gaugeSummaryText.textContent =
+          '현재 구간: ' + st.rangeLabel + ' · 2L 생수 약 ' + formatBottles(total) + '병 절약';
+
+        /* 8단계 미니 스텝 */
+        var dots = el.stageStepDots.querySelectorAll('.step-dot');
+        dots.forEach(function (dot) {
+          var n = Number(dot.dataset.stage);
+          dot.className = 'step-dot';
+          if (n === st.stage) {
+            dot.classList.add('current');
+          } else if (n < st.stage) {
+            dot.classList.add('reached');
+          }
+        });
+
+        if (animateChange) {
+          triggerWaterEffect();
+        }
+      }
+
+      /* 활동 카드 렌더링 */
+      function renderActivities() {
+        el.activityGrid.innerHTML = '';
+        ACTIVITIES.forEach(function (act) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'activity-btn' + (act.fullWidth ? ' activity-btn-full' : '') + (state.selectedActivityId === act.id ? ' selected' : '');
+          btn.setAttribute('role', 'radio');
+          btn.setAttribute('aria-checked', state.selectedActivityId === act.id ? 'true' : 'false');
+          btn.dataset.activityId = act.id;
+
+          if (act.fullWidth) {
+            btn.innerHTML =
+              '<span class="activity-btn-top" style="width:auto;">' +
+                '<span class="activity-emoji">' + act.emoji + '</span>' +
+                '<span class="activity-name">' + act.title + '</span>' +
+              '</span>' +
+              '<span class="activity-meta">' + act.hint + '</span>';
+          } else {
+            btn.innerHTML =
+              '<span class="activity-btn-top">' +
+                '<span class="activity-emoji">' + act.emoji + '</span>' +
+                '<span class="activity-name">' + act.title + '</span>' +
+              '</span>' +
+              '<span class="activity-meta">' + act.hint + '</span>';
+          }
+
+          btn.addEventListener('click', function () {
+            selectActivity(act.id);
+          });
+          el.activityGrid.appendChild(btn);
+        });
+      }
+
+      function clearValidationError() {
+        el.validationMsg.classList.add('hidden');
+        el.activityGrid.classList.remove('error-highlight', 'animate-shake');
+        el.customTitleInput.classList.remove('error-highlight', 'animate-shake');
+      }
+
+      function showValidationError(message, targetEl) {
+        el.validationText.textContent = message;
+        el.validationMsg.classList.remove('hidden');
+
+        el.activityGrid.classList.remove('error-highlight', 'animate-shake');
+        el.customTitleInput.classList.remove('error-highlight', 'animate-shake');
+
+        if (targetEl) {
+          targetEl.classList.add('error-highlight');
+          void targetEl.offsetWidth;
+          targetEl.classList.add('animate-shake');
+          if (typeof targetEl.focus === 'function' && targetEl.tagName === 'INPUT') {
+            targetEl.focus();
+          }
+        }
+      }
+
+      function selectActivity(activityId) {
+        state.selectedActivityId = activityId;
+        var act = getSelectedActivity();
+        if (!act) return;
+
+        state.sliderValue = act.defaultVal;
+        clearValidationError();
+        renderActivities();
+        updateSliderUI();
+
+        if (act.id === 'custom') {
+          setTimeout(function () {
+            el.customTitleInput.focus();
+          }, 30);
+        }
+      }
+
+      function updateSliderUI() {
+        var act = getSelectedActivity();
+        if (!act) {
+          el.sliderPanel.classList.remove('active');
+          el.sliderPanel.classList.add('inactive');
+          el.sliderPickedLabel.textContent = '먼저 위에서 활동을 선택해 주세요';
+          el.sliderPreviewPill.textContent = '예상 +0L';
+          el.customNameGroup.classList.add('hidden');
+          el.amountSlider.disabled = true;
+          el.rangeMinLabel.textContent = '-';
+          el.rangeCurrentDesc.textContent = '활동을 선택하면 조절할 수 있어요';
+          el.rangeMaxLabel.textContent = '-';
+          return;
+        }
+
+        el.sliderPanel.classList.remove('inactive');
+        el.sliderPanel.classList.add('active');
+        el.amountSlider.disabled = false;
+        el.amountSlider.min = String(act.min);
+        el.amountSlider.max = String(act.max);
+        el.amountSlider.step = String(act.step);
+        el.amountSlider.value = String(state.sliderValue);
+
+        if (act.id === 'custom') {
+          el.customNameGroup.classList.remove('hidden');
+        } else {
+          el.customNameGroup.classList.add('hidden');
+        }
+
+        var liters = computeSliderLiters(act, state.sliderValue);
+        el.sliderPickedLabel.textContent = act.emoji + ' ' + act.title;
+        el.sliderPreviewPill.textContent = '예상 +' + liters + 'L (생수 약 ' + formatBottles(liters) + '병)';
+
+        el.rangeMinLabel.textContent = act.min + act.unit;
+        el.rangeMaxLabel.textContent = act.max + act.unit;
+        if (act.id === 'custom') {
+          el.rangeCurrentDesc.textContent = state.sliderValue + 'L 직접 설정';
+        } else {
+          el.rangeCurrentDesc.textContent = state.sliderValue + act.unit + ' 실천 → +' + liters + 'L';
+        }
+      }
+
+      /* 동적 결과 카드 표시 */
+      function showResultCard(details) {
+        el.resultCard.classList.remove('hidden', 'level-up');
+        if (details.didStageUp) {
+          el.resultCard.classList.add('level-up');
+          el.resultPill.classList.add('up');
+          el.resultPill.textContent = '✨ ' + details.prevStage.stage + '단계 → ' + details.newStage.stage + '단계 회복!';
+        } else {
+          el.resultPill.classList.remove('up');
+          el.resultPill.textContent = '💧 포구리에게 물이 전해졌어요!';
+        }
+
+        el.resultActionName.textContent = details.title;
+        el.resultMainText.textContent =
+          '이번 실천으로 +' + details.liters + 'L 절약! (2L 생수 약 ' + formatBottles(details.liters) + '병 분량)';
+
+        if (details.didStageUp) {
+          el.resultSubText.textContent =
+            '포구리가 [' + details.newStage.name + '] 상태가 되었어요! “' + details.newStage.message + '”';
+        } else if (details.progress.isMax) {
+          el.resultSubText.textContent =
+            '포구리는 지금 [' + details.newStage.name + '] 상태로 완벽한 오아시스에서 행복하게 쉬고 있어요!';
+        } else {
+          el.resultSubText.textContent =
+            '현재 포구리는 [' + details.newStage.name + '] 상태예요. 다음 [' + details.progress.next.name + '] 단계까지 ' + details.progress.remaining + 'L 남았어요!';
+        }
+
+        el.resultCard.style.animation = 'none';
+        void el.resultCard.offsetWidth;
+        el.resultCard.style.animation = '';
+      }
+
+      /* 실천 기록 렌더링 */
+      function renderHistory() {
+        el.historyCountPill.textContent = '총 ' + state.logs.length + '건';
+        el.btnResetRequest.disabled = state.logs.length === 0;
+        el.resetConfirmBar.classList.add('hidden');
+
+        if (state.logs.length === 0) {
+          el.historyEmpty.classList.remove('hidden');
+          el.historyList.classList.add('hidden');
+          el.historyList.innerHTML = '';
+          return;
+        }
+
+        el.historyEmpty.classList.add('hidden');
+        el.historyList.classList.remove('hidden');
+        el.historyList.innerHTML = '';
+
+        state.logs.forEach(function (log) {
+          var li = document.createElement('li');
+          li.className = 'history-item';
+
+          var info = document.createElement('div');
+          info.className = 'history-info';
+
+          var titleRow = document.createElement('div');
+          titleRow.className = 'history-title-row';
+
+          var titleSpan = document.createElement('span');
+          titleSpan.className = 'history-title';
+          titleSpan.textContent = log.title;
+
+          var litersSpan = document.createElement('span');
+          litersSpan.className = 'history-liters';
+          litersSpan.textContent = '+' + log.liters + 'L';
+
+          titleRow.appendChild(titleSpan);
+          titleRow.appendChild(litersSpan);
+          info.appendChild(titleRow);
+
+          if (log.memo) {
+            var memoP = document.createElement('p');
+            memoP.className = 'history-memo';
+            memoP.textContent = log.memo;
+            info.appendChild(memoP);
+          }
+
+          var dateP = document.createElement('p');
+          dateP.className = 'history-date';
+          dateP.textContent = formatKoreanDate(log.createdAt);
+          info.appendChild(dateP);
+
+          var delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'btn-delete-log';
+          delBtn.textContent = '삭제';
+          delBtn.setAttribute('aria-label', log.title + ' 기록 삭제');
+          delBtn.addEventListener('click', function () {
+            deleteLog(log.id);
+          });
+
+          li.appendChild(info);
+          li.appendChild(delBtn);
+          el.historyList.appendChild(li);
+        });
+      }
+
+      function deleteLog(id) {
+        state.logs = state.logs.filter(function (item) {
+          return item.id !== id;
+        });
+        saveLogs(state.logs);
+        renderStage(false);
+        renderHistory();
+        if (state.logs.length === 0) {
+          el.resultCard.classList.add('hidden');
+        }
+        showToast('선택한 실천 기록을 삭제했어요.');
+      }
+
+      function resetAllLogs() {
+        state.logs = [];
+        saveLogs(state.logs);
+        el.resultCard.classList.add('hidden');
+        renderStage(false);
+        renderHistory();
+        showToast('모든 물 절약 기록이 초기화되었어요.');
+      }
+
+      /* 모달 컨텐츠 초기화 및 동적 업데이트 */
+      function initModalStaticContent() {
+        el.threatsGrid.innerHTML = '';
+        FROG_THREATS.forEach(function (t) {
+          var card = document.createElement('div');
+          card.className = 'threat-card';
+          card.innerHTML =
+            '<div class="threat-head">' +
+              '<span style="font-size:1.15rem;">' + t.icon + '</span>' +
+              '<h5 class="threat-title">' + t.title + '</h5>' +
+            '</div>' +
+            '<p class="threat-desc">' + t.desc + '</p>';
+          el.threatsGrid.appendChild(card);
+        });
+
+        el.factsGrid.innerHTML = '';
+        WATER_FACTS.forEach(function (f) {
+          var card = document.createElement('div');
+          card.className = 'fact-card';
+          card.innerHTML =
+            '<div class="fact-top">' +
+              '<span class="fact-name">' + f.emoji + ' ' + f.action + '</span>' +
+              '<span class="fact-badge">' + f.perUse + '</span>' +
+            '</div>' +
+            '<p style="margin:0; font-size:0.8rem; color:#50644B;">' + f.detail + '</p>' +
+            '<p class="fact-analogy">💧 ' + f.analogy + '</p>';
+          el.factsGrid.appendChild(card);
+        });
+
+        el.guideStepsGrid.innerHTML = '';
+        GUIDE_STEPS.forEach(function (g) {
+          var card = document.createElement('div');
+          card.className = 'guide-step-card';
+          card.style.backgroundColor = g.bg;
+          card.style.borderColor = g.border;
+          card.innerHTML =
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+              '<span class="guide-step-badge">' + g.step + '</span>' +
+              '<span style="font-size:1.25rem;">' + g.emoji + '</span>' +
+            '</div>' +
+            '<h3 style="margin:0 0 5px; font-size:0.98rem; color:#2F4628;">' + g.title + '</h3>' +
+            '<p style="margin:0; font-size:0.79rem; color:#4C5E47; line-height:1.5;">' + g.desc + '</p>';
+          el.guideStepsGrid.appendChild(card);
+        });
+      }
+
+      function refreshDynamicModals() {
+        var total = getTotalLiters();
+        var progress = getStageProgress(total);
+
+        el.modalBottleCount.textContent = formatBottles(total) + '병';
+        el.modalBathtubSummary.textContent =
+          '현재 총 누적 절약량: ' + total.toLocaleString() + 'L (일반 욕조 200L 기준 약 ' + (total / 200).toFixed(2) + '개 분량)';
+
+        el.guideCurrentStageLabel.textContent = '현재 ' + progress.current.stage + '단계';
+
+        el.roadmapTbody.innerHTML = '';
+        RECOVERY_STAGES.forEach(function (st) {
+          var isCur = st.stage === progress.current.stage;
+          var tr = document.createElement('tr');
+          if (isCur) tr.className = 'roadmap-row-current';
+          tr.innerHTML =
+            '<td><div class="roadmap-thumb"><img src="' + st.image + '" alt="' + st.stage + '단계 ' + st.name + '" /></div></td>' +
+            '<td style="white-space:nowrap; font-family:var(--font-display); color:#2F4628;">' +
+              st.stage + '단계 [' + st.name + ']' +
+              (isCur ? '<span class="current-chip">현재</span>' : '') +
+            '</td>' +
+            '<td style="white-space:nowrap; font-weight:700; color:#2C688C;">' + st.rangeLabel + '</td>' +
+            '<td style="font-size:0.78rem; color:#596C53;">“' + st.message + '”</td>';
+          el.roadmapTbody.appendChild(tr);
+        });
+      }
+
+      function openModal(modalEl) {
+        refreshDynamicModals();
+        modalEl.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeAllModals() {
+        el.storyModal.classList.add('hidden');
+        el.guideModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+
+      function setStoryTab(tabName) {
+        if (tabName === 'why') {
+          el.tabWhyBtn.className = 'modal-tab-btn active-green';
+          el.tabImpactBtn.className = 'modal-tab-btn';
+          el.tabWhyBtn.setAttribute('aria-selected', 'true');
+          el.tabImpactBtn.setAttribute('aria-selected', 'false');
+          el.tabWhyPanel.classList.remove('hidden');
+          el.tabImpactPanel.classList.add('hidden');
+        } else {
+          el.tabWhyBtn.className = 'modal-tab-btn';
+          el.tabImpactBtn.className = 'modal-tab-btn active-water';
+          el.tabWhyBtn.setAttribute('aria-selected', 'false');
+          el.tabImpactBtn.setAttribute('aria-selected', 'true');
+          el.tabWhyPanel.classList.add('hidden');
+          el.tabImpactPanel.classList.remove('hidden');
+        }
+      }
+
+      /* 이벤트 연결 */
+      function bindEvents() {
+        /* 인트로 이벤트 */
+        el.btnSkipIntro.addEventListener('click', function () {
+          openMainView(true);
+        });
+
+        el.btnIntroNext.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (state.introIndex < INTRO_DIALOGUES.length - 1) {
+            state.introIndex += 1;
+            renderIntro();
+          }
+        });
+
+        el.btnIntroStart.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openMainView(true);
+        });
+
+        el.introDialogueBox.addEventListener('click', function () {
+          if (state.introIndex < INTRO_DIALOGUES.length - 1) {
+            state.introIndex += 1;
+            renderIntro();
+          }
+        });
+
+        el.introDialogueBox.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (state.introIndex < INTRO_DIALOGUES.length - 1) {
+              state.introIndex += 1;
+              renderIntro();
+            } else {
+              openMainView(true);
+            }
+          }
+        });
+
+        window.addEventListener('keydown', function (e) {
+          if (!el.introView.classList.contains('hidden')) {
+            var activeTag = document.activeElement ? document.activeElement.tagName : '';
+            if (activeTag === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) {
+              return;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (state.introIndex < INTRO_DIALOGUES.length - 1) {
+                state.introIndex += 1;
+                renderIntro();
+              } else {
+                openMainView(true);
+              }
+            }
+          } else if (e.key === 'Escape') {
+            closeAllModals();
+          }
+        });
+
+        /* 슬라이더 & 입력 */
+        el.amountSlider.addEventListener('input', function () {
+          state.sliderValue = Number(el.amountSlider.value);
+          updateSliderUI();
+        });
+
+        el.customTitleInput.addEventListener('input', function () {
+          clearValidationError();
+        });
+
+        el.waterForm.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var act = getSelectedActivity();
+
+          if (!act) {
+            showValidationError('먼저 물 절약 활동을 선택해 주세요!', el.activityGrid);
+            return;
+          }
+
+          var finalTitle = act.title;
+          if (act.id === 'custom') {
+            var customName = el.customTitleInput.value.trim();
+            if (!customName) {
+              showValidationError('활동 이름을 입력해 주세요!', el.customTitleInput);
+              return;
+            }
+            finalTitle = customName;
+          } else {
+            finalTitle = act.title + ' (' + state.sliderValue + act.unit + ')';
+          }
+
+          var addedLiters = computeSliderLiters(act, state.sliderValue);
+          if (!Number.isFinite(addedLiters) || addedLiters <= 0) {
+            showValidationError('절약량을 1L 이상으로 조절해 주세요!', el.amountSlider);
+            return;
+          }
+
+          clearValidationError();
+
+          var prevTotal = getTotalLiters();
+          var prevStage = getStageProgress(prevTotal).current;
+
+          var newLog = {
+            id: 'log-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+            title: finalTitle,
+            liters: addedLiters,
+            memo: el.memoInput.value.trim(),
+            createdAt: new Date().toISOString()
+          };
+
+          state.logs.unshift(newLog);
+          saveLogs(state.logs);
+
+          var newTotal = getTotalLiters();
+          var newProgress = getStageProgress(newTotal);
+          var didStageUp = newProgress.current.stage > prevStage.stage;
+
+          renderStage(true);
+          renderHistory();
+          showResultCard({
+            title: finalTitle,
+            liters: addedLiters,
+            prevStage: prevStage,
+            newStage: newProgress.current,
+            progress: newProgress,
+            didStageUp: didStageUp
+          });
+
+          showToast(
+            '+' + addedLiters + 'L 절약! 포구리에게 물이 닿았어요 💧',
+            didStageUp
+              ? '✨ ' + newProgress.current.stage + '단계 [' + newProgress.current.name + '] 상태로 회복되었어요!'
+              : ''
+          );
+
+          el.memoInput.value = '';
+          if (act.id === 'custom') {
+            el.customTitleInput.value = '';
+          }
+
+          /* 모바일 등 작은 화면에서 포구리 반응 및 결과 카드를 바로 볼 수 있도록 부드럽게 스크롤 */
+          var stageRect = el.stageBounceBox.getBoundingClientRect();
+          if (stageRect.top < 0 || window.innerWidth < 940) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
+
+        /* 초기화 확인바 */
+        el.btnResetRequest.addEventListener('click', function () {
+          el.resetConfirmBar.classList.remove('hidden');
+        });
+        el.btnResetCancel.addEventListener('click', function () {
+          el.resetConfirmBar.classList.add('hidden');
+        });
+        el.btnResetConfirm.addEventListener('click', function () {
+          resetAllLogs();
+        });
+
+        /* 헤더 & 모달 */
+        el.btnOpenStory.addEventListener('click', function () {
+          setStoryTab('why');
+          openModal(el.storyModal);
+        });
+        el.btnOpenGuide.addEventListener('click', function () {
+          openModal(el.guideModal);
+        });
+        el.btnReplayIntro.addEventListener('click', function () {
+          openIntroView();
+        });
+        el.btnModalReplay.addEventListener('click', function () {
+          openIntroView();
+        });
+
+        el.tabWhyBtn.addEventListener('click', function () {
+          setStoryTab('why');
+        });
+        el.tabImpactBtn.addEventListener('click', function () {
+          setStoryTab('impact');
+        });
+
+        document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
+          btn.addEventListener('click', closeAllModals);
+        });
+
+        [el.storyModal, el.guideModal].forEach(function (backdrop) {
+          backdrop.addEventListener('click', function (e) {
+            if (e.target === backdrop) {
+              closeAllModals();
+            }
+          });
+        });
+      }
+
+      /* 초기 부트스트랩 */
+      function init() {
+        state.introSeen = loadIntroSeen();
+        state.logs = loadLogs();
+        state.lastStageNumber = getStageProgress(getTotalLiters()).current.stage;
+
+        initStageStaticNodes();
+        initModalStaticContent();
+        renderActivities();
+        updateSliderUI();
+        bindEvents();
+
+        if (state.introSeen) {
+          openMainView(false);
+        } else {
+          renderIntro();
+          el.introView.classList.remove('hidden');
+          el.mainView.classList.add('hidden');
+        }
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
