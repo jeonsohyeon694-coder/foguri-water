@@ -2140,7 +2140,6 @@
       'use strict';
 
       var STORAGE_KEYS = {
-        INTRO_SEEN: 'poguri_intro_seen_v1',
         LOGS: 'poguri_water_logs_v1'
       };
 
@@ -2407,7 +2406,6 @@
       /* 상태 */
       var state = {
         introIndex: 0,
-        introSeen: false,
         logs: [],
         selectedActivityId: null,
         sliderValue: 1,
@@ -2416,22 +2414,6 @@
       };
 
       /* 유틸 */
-      function loadIntroSeen() {
-        try {
-          return localStorage.getItem(STORAGE_KEYS.INTRO_SEEN) === 'true';
-        } catch (e) {
-          return false;
-        }
-      }
-
-      function saveIntroSeen(seen) {
-        try {
-          localStorage.setItem(STORAGE_KEYS.INTRO_SEEN, seen ? 'true' : 'false');
-        } catch (e) {
-          /* ignore storage quota errors */
-        }
-      }
-
       function loadLogs() {
         try {
           var raw = localStorage.getItem(STORAGE_KEYS.LOGS);
@@ -2648,11 +2630,7 @@
         }
       }
 
-      function openMainView(markSeen) {
-        if (markSeen) {
-          saveIntroSeen(true);
-          state.introSeen = true;
-        }
+      function openMainView() {
         el.introView.classList.add('hidden');
         el.mainView.classList.remove('hidden');
         renderStage(false);
@@ -3123,7 +3101,7 @@
       function bindEvents() {
         /* 인트로 이벤트 */
         el.btnSkipIntro.addEventListener('click', function () {
-          openMainView(true);
+          openMainView();
         });
 
         el.btnIntroNext.addEventListener('click', function (e) {
@@ -3136,7 +3114,7 @@
 
         el.btnIntroStart.addEventListener('click', function (e) {
           e.stopPropagation();
-          openMainView(true);
+          openMainView();
         });
 
         el.introDialogueBox.addEventListener('click', function () {
@@ -3154,7 +3132,7 @@
               state.introIndex += 1;
               renderIntro();
             } else {
-              openMainView(true);
+              openMainView();
             }
           }
         });
@@ -3171,7 +3149,7 @@
                 state.introIndex += 1;
                 renderIntro();
               } else {
-                openMainView(true);
+                openMainView();
               }
             }
           } else if (e.key === 'Escape') {
@@ -3314,7 +3292,6 @@
 
       /* 초기 부트스트랩 */
       function init() {
-        state.introSeen = loadIntroSeen();
         state.logs = loadLogs();
         state.lastStageNumber = getStageProgress(getTotalLiters()).current.stage;
 
@@ -3324,13 +3301,9 @@
         updateSliderUI();
         bindEvents();
 
-        if (state.introSeen) {
-          openMainView(false);
-        } else {
-          renderIntro();
-          el.introView.classList.remove('hidden');
-          el.mainView.classList.add('hidden');
-        }
+        renderIntro();
+        el.introView.classList.remove('hidden');
+        el.mainView.classList.add('hidden');
       }
 
       init();
